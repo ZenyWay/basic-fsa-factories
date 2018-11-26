@@ -18,17 +18,20 @@ const { createActionDispatchers } = require('../')
 
 describe('createActionDispatchers:', () => {
   describe('when called with a spec map:', () => {
-    let factory, dispatch
+    let factory, voidFactory, dispatch
 
     beforeEach(() => {
       factory = jasmine.createSpy('factory').and.returnValue('foo')
+      voidFactory = jasmine.createSpy('voidFactory').and.returnValue()
       dispatch = jasmine.createSpy('dispatch')
-      const { onPing, onPong } = createActionDispatchers({
+      const { onPing, onPong, onBing } = createActionDispatchers({
         onPing: 'PING',
-        onPong: ['PONG', factory]
+        onPong: ['PONG', factory],
+        onBing: voidFactory
       })(dispatch)
       onPing('foo', 'bar')
       onPong('bar', 'baz')
+      onBing('zap')
     })
 
     it('returns a factory that maps a dispatch function to a map with, ' +
@@ -39,6 +42,8 @@ describe('createActionDispatchers:', () => {
       expect(dispatch).toHaveBeenCalledWith({ type: 'PING', payload: 'foo' })
       expect(factory).toHaveBeenCalledWith('bar', 'baz')
       expect(dispatch).toHaveBeenCalledWith({ type: 'PONG', payload: 'foo' })
+      expect(voidFactory).toHaveBeenCalledWith('zap')
+      expect(dispatch.calls.count()).toBe(2)
     })
   })
 })

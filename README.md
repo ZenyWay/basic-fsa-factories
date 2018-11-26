@@ -51,6 +51,9 @@ export interface KeyedMap<V> {
 run the [unit tests](https://cdn.rawgit.com/ZenyWay/basic-fsa-factories/v1.0.0/spec/web/index.html)
 in your browser.
 
+note that when a factory function returns nothing or something falsy,
+the dispatcher is not called.
+
 # TypeScript
 although this library is written in [TypeScript](https://www.typescriptlang.org),
 it may also be imported into plain JavaScript code:

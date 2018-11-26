@@ -21,10 +21,7 @@ export function createActionDispatchers (
   return function (dispatch: (event: any) => void) {
     return keys.reduce(
       function (handlers, key) {
-        const factory = factories[key]
-        handlers[key] = function (...args: any[]) {
-          dispatch(factory(...args))
-        }
+        handlers[key] = createDispatcher(dispatch, factories[key])
         return handlers
       },
       {} as KeyedMap<(args: any[]) => void>)
@@ -37,9 +34,14 @@ export function createActionDispatcher <P>(
 ) {
   const factory = createActionFactory(type, createPayload)
   return function (dispatch: (event: any) => void) {
-    return function (...args: any[]) {
-      dispatch(factory(...args))
-    }
+    return createDispatcher(dispatch, factory)
+  }
+}
+
+function createDispatcher (dispatch: (event: any) => void, factory: Function) {
+  return function (...args: any[]) {
+    const action = factory(...args)
+    if (action) dispatch(action)
   }
 }
 
