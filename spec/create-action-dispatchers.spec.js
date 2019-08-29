@@ -14,36 +14,39 @@
  * Limitations under the License.
  */
 //
-const { createActionDispatchers } = require('../')
+const test = require('tape')
+const { createActionDispatchers, payload } = require('../')
 
-describe('createActionDispatchers:', () => {
-  describe('when called with a spec map:', () => {
-    let factory, voidFactory, dispatch
-
-    beforeEach(() => {
-      factory = jasmine.createSpy('factory').and.returnValue('foo')
-      voidFactory = jasmine.createSpy('voidFactory').and.returnValue()
-      dispatch = jasmine.createSpy('dispatch')
-      const { onPing, onPong, onBing } = createActionDispatchers({
-        onPing: 'PING',
-        onPong: ['PONG', factory],
-        onBing: voidFactory
-      })(dispatch)
-      onPing('foo', 'bar')
-      onPong('bar', 'baz')
-      onBing('zap')
+test('createActionDispatchers:', t => {
+  t.test('when called with a spec map:', t => {
+    const actions = []
+    const factory = createActionDispatchers({
+      PING: payload(),
+      PONG: (foo, bar) => ({ foo, bar })
     })
+    t.equal(typeof factory, 'function', 'returns a function')
 
-    it('returns a factory that maps a dispatch function to a map with, ' +
-    'for each key in the given spec map, ' +
-    'an FSA dispatcher that creates FSA objects ' +
-    'as specified by the corresponding spec value, ' +
-    'and calls the given dispatch function with that object.', function () {
-      expect(dispatch).toHaveBeenCalledWith({ type: 'PING', payload: 'foo' })
-      expect(factory).toHaveBeenCalledWith('bar', 'baz')
-      expect(dispatch).toHaveBeenCalledWith({ type: 'PONG', payload: 'foo' })
-      expect(voidFactory).toHaveBeenCalledWith('zap')
-      expect(dispatch.calls.count()).toBe(2)
+    t.test('which when called with a dispatcher', t => {
+      const dispatch = factory(actions.push.bind(actions))
+      t.deepEqual(
+        Object.keys(dispatch).map(k => [k, typeof dispatch[k]]),
+        [['PING', 'function'], ['PONG', 'function']],
+        'returns a map of functions with the same keys as the spec map'
+      )
+      dispatch.PING('foo')
+      dispatch.PONG('bar', 'baz')
+      t.deepEqual(
+        actions,
+        [
+          { type: 'PING', payload: 'foo' },
+          { type: 'PONG', payload: { foo: 'bar', bar: 'baz' } }
+        ],
+        'each function in the returned map dispatches an FSA ' +
+          'created from its arguments as specified by the corresponding spec value'
+      )
+      t.end()
     })
+    t.end()
   })
+  t.end()
 })

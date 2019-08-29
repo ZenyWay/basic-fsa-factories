@@ -1,4 +1,3 @@
-'use strict' /* eslint-env jasmine */
 /**
  * @license
  * Copyright 2018 Stephane M. Catala
@@ -14,37 +13,56 @@
  * Limitations under the License.
  */
 //
-const { createActionFactory } = require('../')
+const test = require('tape')
+const { createActionFactory, payload } = require('../')
 
-describe('createActionFactory:', () => {
-  describe('when called with a string type argument:', () => {
-    let result
+test('createActionFactory:', t => {
+  t.test('when called with a string type argument:', st => {
+    const ping = createActionFactory('PING')
+    st.equal(typeof ping, 'function', 'returns a function')
 
-    beforeEach(() => {
-      const ping = createActionFactory('PING')
-      result = ping('foo', 'bar')
-    })
-
-    it('returns a factory that maps a payload argument ' +
-    'to a corresponding FSA of the given type.', function () {
-      expect(result).toEqual({ type: 'PING', payload: 'foo' })
-    })
+    const action = ping('foo')
+    st.deepEqual(
+      action,
+      { type: 'PING', payload: 'foo' },
+      'returns a factory that maps a payload argument ' +
+        'to a corresponding FSA of the given type.'
+    )
+    st.end()
   })
 
-  describe('when called with an additional payload factory argument:', () => {
-    let factory, result
+  t.test(
+    'when called with a string type argument ' +
+      'and the return value of the exported `payload` helper:',
+    st => {
+      const ping = createActionFactory('PING', payload())
+      st.equal(typeof ping, 'function', 'returns a function')
 
-    beforeEach(() => {
-      factory = jasmine.createSpy('factory').and.returnValue('foo')
-      const ping = createActionFactory('PING', factory)
-      result = ping('bar', 'baz')
-    })
+      const action = ping('foo')
+      st.deepEqual(
+        action,
+        { type: 'PING', payload: 'foo' },
+        'returns a factory that maps a payload argument ' +
+          'to a corresponding FSA of the given type.'
+      )
+      st.end()
+    }
+  )
 
-    it('returns a factory that maps its arguments ' +
-    'with the given payload factory ' +
-    'to a corresponding FSA of the given type.', function () {
-      expect(factory).toHaveBeenCalledWith('bar', 'baz')
-      expect(result).toEqual({ type: 'PING', payload: 'foo' })
-    })
+  t.test('when called with an additional payload factory argument:', st => {
+    const ping = createActionFactory('PING', (foo, bar) => ({ foo, bar }))
+    st.equal(typeof ping, 'function', 'returns a function')
+
+    const action = ping('bar', 'baz')
+    st.deepEqual(
+      action,
+      { type: 'PING', payload: { foo: 'bar', bar: 'baz' } },
+      'returns a factory that maps its arguments ' +
+        'with the given payload factory ' +
+        'to a corresponding FSA of the given type.'
+    )
+    st.end()
   })
+
+  t.end()
 })
